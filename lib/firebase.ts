@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,8 +11,36 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// Guard: don't initialize during server-side prerendering (no API key)
+function getApp_(): FirebaseApp {
+  if (!firebaseConfig.apiKey) {
+    throw new Error("Firebase API key not found. Add NEXT_PUBLIC_FIREBASE_* to your environment variables.");
+  }
+  return getApps().length ? getApp() : initializeApp(firebaseConfig);
+}
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export default app;
+let _auth: Auth | null = null;
+let _db: Firestore | null = null;
+
+export function getFirebaseAuth(): Auth {
+  if (!_auth) _auth = getAuth(getApp_());
+  return _auth;
+}
+
+export function getFirebaseDb(): Firestore {
+  if (!_db) _db = getFirestore(getApp_());
+  return _db;
+}
+
+// Lazy getters — same API for existing imports
+export const auth = new Proxy({} as Auth, {
+  get(_, prop) {
+    return (getFirebaseAuth() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
+
+export const db = new Proxy({} as Firestore, {
+  get(_, prop) {
+    return (getFirebaseDb() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});

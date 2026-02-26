@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import { onSnapshot, doc, collection } from "firebase/firestore";
