@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Cartas contra Joao",
   description: "El juego de cartas para personas horribles",
   manifest: "/manifest.json",
+  icons: { icon: "/logo.svg", shortcut: "/logo.svg" },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black",
