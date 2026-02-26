@@ -29,7 +29,11 @@ export function VerdictPhase({ room, currentPlayer, players }: VerdictPhaseProps
     setPicking(true);
     try {
       await pickWinner(room.roomCode, submissionId);
-      setLocalWinner(room.submissionMap[submissionId]);
+      // submissionMap is { playerId → submissionId }, reverse-lookup to get playerId
+      const winnerId = Object.entries(room.submissionMap).find(
+        ([, sid]) => sid === submissionId
+      )?.[0] ?? null;
+      setLocalWinner(winnerId);
     } catch (e) {
       console.error(e);
     } finally {
@@ -82,36 +86,29 @@ export function VerdictPhase({ room, currentPlayer, players }: VerdictPhaseProps
       )}
 
       <div className="flex flex-col gap-3">
-        {submissionEntries.map(([subId, cards]) => {
-          const ownerId = room.submissionMap[subId];
-          const owner = players.find((p) => p.id === ownerId);
-
-          return (
-            <button
-              key={subId}
-              disabled={!isZar || picking}
-              onClick={() => handlePickWinner(subId)}
-              className={cn(
-                "text-left rounded-2xl p-4 border-2 transition-all",
-                isZar
-                  ? "border-zinc-700 active:border-white active:scale-[0.98] cursor-pointer"
-                  : "border-zinc-800 cursor-default",
-                picking && "opacity-70"
-              )}
-            >
-              {owner && (
-                <p className="text-zinc-500 text-xs mb-2 font-semibold">
-                  — {owner.name}
-                </p>
-              )}
-              <div className="flex flex-col gap-2">
-                {cards.map((card, i) => (
-                  <WhiteCard key={i} text={card} size="md" />
-                ))}
-              </div>
-            </button>
-          );
-        })}
+        {submissionEntries.map(([subId, cards], idx) => (
+          <button
+            key={subId}
+            disabled={!isZar || picking}
+            onClick={() => handlePickWinner(subId)}
+            className={cn(
+              "text-left rounded-2xl p-4 border-2 transition-all",
+              isZar
+                ? "border-zinc-700 active:border-white active:scale-[0.98] cursor-pointer"
+                : "border-zinc-800 cursor-default",
+              picking && "opacity-70"
+            )}
+          >
+            <p className="text-zinc-600 text-xs mb-2 font-semibold">
+              Respuesta {idx + 1}
+            </p>
+            <div className="flex flex-col gap-2">
+              {cards.map((card, i) => (
+                <WhiteCard key={i} text={card} size="md" />
+              ))}
+            </div>
+          </button>
+        ))}
       </div>
 
       {picking && (

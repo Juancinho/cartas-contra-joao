@@ -33,6 +33,7 @@ const ALL_SETS = [
   { codeName: "world-wide-web-pack", name: "WWW Pack", official: false },
   { codeName: "reject-pack", name: "Reject Pack", official: false },
   { codeName: "reject-pack-2", name: "Reject Pack 2", official: false },
+  { codeName: "gigi", name: "Pack Gigi", official: false },
 ];
 
 interface HostConfigProps {

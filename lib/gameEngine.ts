@@ -282,7 +282,10 @@ export async function pickWinner(
     const room = roomSnap.data() as Room;
     if (room.phase !== "verdict") return;
 
-    const winnerId = room.submissionMap[submissionId];
+    // submissionMap is { playerId → submissionId }, so reverse-lookup to find playerId
+    const winnerId = Object.entries(room.submissionMap).find(
+      ([, sid]) => sid === submissionId
+    )?.[0];
     if (!winnerId) return;
 
     const winnerSnap = await tx.get(playerRef(roomCode, winnerId));

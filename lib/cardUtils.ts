@@ -90,6 +90,7 @@ export async function loadAllSets(): Promise<CardSet[]> {
     "the-sixth-expansion",
     "the-third-expansion",
     "world-wide-web-pack",
+    "gigi",
   ];
 
   const sets: CardSet[] = [];
