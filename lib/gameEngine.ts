@@ -10,7 +10,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { signInAnonymously } from "firebase/auth";
-import { db, auth } from "./firebase";
+import { getFirebaseAuth, getFirebaseDb } from "./firebase";
 import { generateRoomCode, buildDeck, shuffle } from "./cardUtils";
 import type {
   Room,
@@ -27,6 +27,7 @@ const HAND_SIZE = 10;
 // ─── Auth ──────────────────────────────────────────────────────────────────
 
 export async function ensureAuth(): Promise<string> {
+  const auth = getFirebaseAuth();
   if (auth.currentUser) return auth.currentUser.uid;
   const cred = await signInAnonymously(auth);
   return cred.user.uid;
@@ -34,13 +35,13 @@ export async function ensureAuth(): Promise<string> {
 
 // ─── Room references ───────────────────────────────────────────────────────
 
-export const roomRef = (code: string) => doc(db, "rooms", code);
+export const roomRef = (code: string) => doc(getFirebaseDb(), "rooms", code);
 export const playerRef = (code: string, uid: string) =>
-  doc(db, "rooms", code, "players", uid);
+  doc(getFirebaseDb(), "rooms", code, "players", uid);
 export const deckRef = (code: string) =>
-  doc(db, "rooms", code, "deck", "main");
+  doc(getFirebaseDb(), "rooms", code, "deck", "main");
 export const playersRef = (code: string) =>
-  collection(db, "rooms", code, "players");
+  collection(getFirebaseDb(), "rooms", code, "players");
 
 // ─── Create Room ───────────────────────────────────────────────────────────
 
@@ -105,7 +106,7 @@ export async function joinRoom(
   const code = roomCode.toUpperCase();
 
   try {
-    const result = await runTransaction(db, async (tx) => {
+    const result = await runTransaction(getFirebaseDb(), async (tx) => {
       const roomSnap = await tx.get(roomRef(code));
       if (!roomSnap.exists()) return { success: false, error: "Sala no encontrada" };
 
@@ -216,7 +217,7 @@ export async function submitCards(
 ): Promise<void> {
   const submissionId = crypto.randomUUID();
 
-  await runTransaction(db, async (tx) => {
+  await runTransaction(getFirebaseDb(), async (tx) => {
     const roomSnap = await tx.get(roomRef(roomCode));
     const playerSnap = await tx.get(playerRef(roomCode, playerId));
     if (!roomSnap.exists() || !playerSnap.exists()) return;
@@ -246,7 +247,7 @@ export async function submitCards(
 // ─── Advance to Reveal ──────────────────────────────────────────────────────
 
 export async function advanceToReveal(roomCode: string): Promise<void> {
-  await runTransaction(db, async (tx) => {
+  await runTransaction(getFirebaseDb(), async (tx) => {
     const roomSnap = await tx.get(roomRef(roomCode));
     if (!roomSnap.exists()) return;
     const room = roomSnap.data() as Room;
@@ -259,7 +260,7 @@ export async function advanceToReveal(roomCode: string): Promise<void> {
 // ─── Advance to Verdict ─────────────────────────────────────────────────────
 
 export async function advanceToVerdict(roomCode: string): Promise<void> {
-  await runTransaction(db, async (tx) => {
+  await runTransaction(getFirebaseDb(), async (tx) => {
     const roomSnap = await tx.get(roomRef(roomCode));
     if (!roomSnap.exists()) return;
     const room = roomSnap.data() as Room;
@@ -275,7 +276,7 @@ export async function pickWinner(
   roomCode: string,
   submissionId: string
 ): Promise<void> {
-  await runTransaction(db, async (tx) => {
+  await runTransaction(getFirebaseDb(), async (tx) => {
     const roomSnap = await tx.get(roomRef(roomCode));
     if (!roomSnap.exists()) return;
     const room = roomSnap.data() as Room;
@@ -303,7 +304,7 @@ export async function pickWinner(
 // ─── Next Round ────────────────────────────────────────────────────────────
 
 export async function nextRound(roomCode: string): Promise<void> {
-  await runTransaction(db, async (tx) => {
+  await runTransaction(getFirebaseDb(), async (tx) => {
     const roomSnap = await tx.get(roomRef(roomCode));
     const deckSnap = await tx.get(deckRef(roomCode));
     if (!roomSnap.exists() || !deckSnap.exists()) return;

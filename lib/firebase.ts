@@ -11,8 +11,15 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// Lazy getters — Firebase is NOT initialized at module load time.
+// This prevents crashes during Next.js server-side prerendering at build time.
+// These functions are only called from event handlers and useEffect (client-side).
+export function getFirebaseAuth() {
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  return getAuth(app);
+}
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export default app;
+export function getFirebaseDb() {
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  return getFirestore(app);
+}

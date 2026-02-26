@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import { onSnapshot, doc, collection } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { db, auth } from "@/lib/firebase";
+import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
 import { ensureAuth, startGame, joinRoom } from "@/lib/gameEngine";
 import { loadAllSets } from "@/lib/cardUtils";
 import { PlayerList } from "@/components/lobby/PlayerList";
@@ -42,7 +42,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomCode: strin
 
   // Auth init
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (user) => {
+    const unsub = onAuthStateChanged(getFirebaseAuth(), async (user) => {
       if (user) {
         setUid(user.uid);
       } else {
@@ -62,7 +62,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomCode: strin
   useEffect(() => {
     if (!roomCode || !uid) return;
     const unsub = onSnapshot(
-      doc(db, "rooms", roomCode.toUpperCase()),
+      doc(getFirebaseDb(), "rooms", roomCode.toUpperCase()),
       (snap) => {
         if (!snap.exists()) {
           setError("Sala no encontrada");
@@ -85,7 +85,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomCode: strin
   useEffect(() => {
     if (!roomCode || !uid) return;
     const unsub = onSnapshot(
-      collection(db, "rooms", roomCode.toUpperCase(), "players"),
+      collection(getFirebaseDb(), "rooms", roomCode.toUpperCase(), "players"),
       (snap) => {
         const ps = snap.docs.map((d) => d.data() as Player);
         setPlayers(ps);
