@@ -8,12 +8,11 @@ const Spinner = () => (
   </div>
 );
 
-// ssr: false → HomeClient (y Firebase) nunca se ejecutan en el servidor
-const HomeClient = dynamic(() => import("@/components/HomeClient"), {
+const RoomClient = dynamic(() => import("@/components/RoomClient"), {
   ssr: false,
   loading: Spinner,
 });
 
-export default function Page() {
-  return <HomeClient />;
+export default function RoomWrapper({ roomCode }: { roomCode: string }) {
+  return <RoomClient roomCode={roomCode} />;
 }
