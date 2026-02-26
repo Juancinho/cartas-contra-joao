@@ -9,7 +9,7 @@ import type { RoomConfig } from "@/lib/types";
 const DEFAULT_CONFIG: RoomConfig = {
   maxPoints: 8,
   maxRounds: null,
-  selectedSets: ["base-set"],
+  selectedSets: ["gigi", "CAH-es-set"],
 };
 
 type View = "home" | "create" | "join";

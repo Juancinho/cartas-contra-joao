@@ -8,32 +8,32 @@ import { parseCustomSet } from "@/lib/cardUtils";
 import type { Room, CardSet, RoomConfig } from "@/lib/types";
 
 const ALL_SETS = [
-  { codeName: "base-set", name: "Base Set", official: true },
-  { codeName: "CAH-es-set", name: "Pack Oficial España", official: true },
-  { codeName: "green-box-expansion", name: "Green Box Expansion", official: true },
-  { codeName: "the-first-expansion", name: "1ª Expansión", official: true },
-  { codeName: "the-second-expansion", name: "2ª Expansión", official: true },
-  { codeName: "the-third-expansion", name: "3ª Expansión", official: true },
-  { codeName: "the-fourth-expansion", name: "4ª Expansión", official: true },
-  { codeName: "the-fifth-expansion", name: "5ª Expansión", official: true },
-  { codeName: "the-sixth-expansion", name: "6ª Expansión", official: true },
-  { codeName: "canadian", name: "Canadian", official: false },
-  { codeName: "fantasy-pack", name: "Fantasy Pack", official: false },
-  { codeName: "food-pack", name: "Food Pack", official: false },
-  { codeName: "holiday-pack-2012", name: "Holiday Pack 2012", official: false },
-  { codeName: "holiday-pack-2013", name: "Holiday Pack 2013", official: false },
-  { codeName: "house-of-cards-against-humanity", name: "House of Cards", official: false },
-  { codeName: "nostalgia-pack-90s", name: "Nostalgia 90s", official: false },
-  { codeName: "pax-east-2013", name: "PAX East 2013", official: false },
-  { codeName: "pax-east-2014", name: "PAX East 2014", official: false },
-  { codeName: "pax-prime-2013", name: "PAX Prime 2013", official: false },
-  { codeName: "programmer-pack", name: "Programmer Pack", official: false },
-  { codeName: "red-rising-pack", name: "Red Rising", official: false },
-  { codeName: "science-pack", name: "Science Pack", official: false },
-  { codeName: "world-wide-web-pack", name: "WWW Pack", official: false },
-  { codeName: "reject-pack", name: "Reject Pack", official: false },
-  { codeName: "reject-pack-2", name: "Reject Pack 2", official: false },
-  { codeName: "gigi", name: "Pack Gigi", official: false },
+  { codeName: "gigi", name: "Pack Gigi", official: false, group: "featured" },
+  { codeName: "CAH-es-set", name: "Pack Oficial España", official: true, group: "featured" },
+  { codeName: "base-set", name: "Base Set", official: true, group: "official" },
+  { codeName: "green-box-expansion", name: "Green Box Expansion", official: true, group: "official" },
+  { codeName: "the-first-expansion", name: "1ª Expansión", official: true, group: "official" },
+  { codeName: "the-second-expansion", name: "2ª Expansión", official: true, group: "official" },
+  { codeName: "the-third-expansion", name: "3ª Expansión", official: true, group: "official" },
+  { codeName: "the-fourth-expansion", name: "4ª Expansión", official: true, group: "official" },
+  { codeName: "the-fifth-expansion", name: "5ª Expansión", official: true, group: "official" },
+  { codeName: "the-sixth-expansion", name: "6ª Expansión", official: true, group: "official" },
+  { codeName: "canadian", name: "Canadian", official: false, group: "special" },
+  { codeName: "fantasy-pack", name: "Fantasy Pack", official: false, group: "special" },
+  { codeName: "food-pack", name: "Food Pack", official: false, group: "special" },
+  { codeName: "holiday-pack-2012", name: "Holiday Pack 2012", official: false, group: "special" },
+  { codeName: "holiday-pack-2013", name: "Holiday Pack 2013", official: false, group: "special" },
+  { codeName: "house-of-cards-against-humanity", name: "House of Cards", official: false, group: "special" },
+  { codeName: "nostalgia-pack-90s", name: "Nostalgia 90s", official: false, group: "special" },
+  { codeName: "pax-east-2013", name: "PAX East 2013", official: false, group: "special" },
+  { codeName: "pax-east-2014", name: "PAX East 2014", official: false, group: "special" },
+  { codeName: "pax-prime-2013", name: "PAX Prime 2013", official: false, group: "special" },
+  { codeName: "programmer-pack", name: "Programmer Pack", official: false, group: "special" },
+  { codeName: "red-rising-pack", name: "Red Rising", official: false, group: "special" },
+  { codeName: "science-pack", name: "Science Pack", official: false, group: "special" },
+  { codeName: "world-wide-web-pack", name: "WWW Pack", official: false, group: "special" },
+  { codeName: "reject-pack", name: "Reject Pack", official: false, group: "special" },
+  { codeName: "reject-pack-2", name: "Reject Pack 2", official: false, group: "special" },
 ];
 
 interface HostConfigProps {
@@ -43,7 +43,9 @@ interface HostConfigProps {
 }
 
 export function HostConfig({ room, customSets, onCustomSetAdded }: HostConfigProps) {
-  const [selectedSets, setSelectedSets] = useState<string[]>(room.config.selectedSets);
+  const [selectedSets, setSelectedSets] = useState<string[]>(
+    room.config.selectedSets.length > 0 ? room.config.selectedSets : ["gigi", "CAH-es-set"]
+  );
   const [maxPoints, setMaxPoints] = useState(room.config.maxPoints);
   const [maxRounds, setMaxRounds] = useState<number | null>(room.config.maxRounds);
   const [showSets, setShowSets] = useState(true);
@@ -206,9 +208,21 @@ export function HostConfig({ room, customSets, onCustomSetAdded }: HostConfigPro
               </button>
             </div>
 
+            {/* Featured sets */}
+            <p className="text-zinc-600 text-xs uppercase tracking-wider font-semibold mt-1 mb-1">⭐ Destacados</p>
+            {ALL_SETS.filter(s => s.group === "featured").map((set) => (
+              <SetToggle
+                key={set.codeName}
+                name={set.name}
+                selected={selectedSets.includes(set.codeName)}
+                onToggle={() => toggleSet(set.codeName)}
+                featured
+              />
+            ))}
+
             {/* Official sets */}
-            <p className="text-zinc-600 text-xs uppercase tracking-wider font-semibold mt-1 mb-1">Oficiales</p>
-            {ALL_SETS.filter(s => s.official).map((set) => (
+            <p className="text-zinc-600 text-xs uppercase tracking-wider font-semibold mt-3 mb-1">Oficiales</p>
+            {ALL_SETS.filter(s => s.group === "official").map((set) => (
               <SetToggle
                 key={set.codeName}
                 name={set.name}
@@ -217,9 +231,9 @@ export function HostConfig({ room, customSets, onCustomSetAdded }: HostConfigPro
               />
             ))}
 
-            {/* Community sets */}
+            {/* Special packs */}
             <p className="text-zinc-600 text-xs uppercase tracking-wider font-semibold mt-3 mb-1">Packs especiales</p>
-            {ALL_SETS.filter(s => !s.official).map((set) => (
+            {ALL_SETS.filter(s => s.group === "special").map((set) => (
               <SetToggle
                 key={set.codeName}
                 name={set.name}
@@ -349,13 +363,15 @@ export function HostConfig({ room, customSets, onCustomSetAdded }: HostConfigPro
   );
 }
 
-function SetToggle({ name, selected, onToggle }: { name: string; selected: boolean; onToggle: () => void }) {
+function SetToggle({ name, selected, onToggle, featured }: { name: string; selected: boolean; onToggle: () => void; featured?: boolean }) {
   return (
     <button
       onClick={onToggle}
       className={cn(
         "flex items-center gap-3 w-full py-2.5 px-3 rounded-xl text-sm font-medium transition-colors text-left",
-        selected ? "bg-white text-black" : "bg-zinc-800/60 text-zinc-400 active:bg-zinc-800"
+        selected
+          ? featured ? "bg-white text-black ring-2 ring-yellow-400" : "bg-white text-black"
+          : "bg-zinc-800/60 text-zinc-400 active:bg-zinc-800"
       )}
     >
       <div className={cn(
