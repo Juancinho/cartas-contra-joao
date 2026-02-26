@@ -63,7 +63,7 @@ export interface Room {
   submissions: Submissions;
   submissionMap: SubmissionMap;
   submittedCount: number;
-  winnerPlayerId: string | null;
+  winnerPlayerIds: string[]; // one per blank filled by the Zar
   playerOrder: string[]; // ordered UIDs for zar rotation
   createdAt: Timestamp;
 }

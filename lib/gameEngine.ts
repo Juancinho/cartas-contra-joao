@@ -74,7 +74,7 @@ export async function createRoom(
     submissions: {},
     submissionMap: {},
     submittedCount: 0,
-    winnerPlayerId: null,
+    winnerPlayerIds: [],
     playerOrder: [uid],
     createdAt: serverTimestamp(),
   };
@@ -204,7 +204,7 @@ export async function startGame(
     submissions: {},
     submissionMap: {},
     submittedCount: 0,
-    winnerPlayerId: null,
+    winnerPlayerIds: [],
   });
 }
 
@@ -270,11 +270,13 @@ export async function advanceToVerdict(roomCode: string): Promise<void> {
   });
 }
 
-// ─── Pick Winner ───────────────────────────────────────────────────────────
+// ─── Pick Winners (one submissionId per blank) ─────────────────────────────
+// Each submissionId maps to one player who gets +1 point.
+// The same player can appear multiple times (if Zar picks their card for 2+ blanks).
 
-export async function pickWinner(
+export async function pickWinners(
   roomCode: string,
-  submissionId: string
+  submissionIds: string[] // ordered: [blank1SubId, blank2SubId, ...]
 ): Promise<void> {
   await runTransaction(getFirebaseDb(), async (tx) => {
     const roomSnap = await tx.get(roomRef(roomCode));
@@ -282,23 +284,38 @@ export async function pickWinner(
     const room = roomSnap.data() as Room;
     if (room.phase !== "verdict") return;
 
-    // submissionMap is { playerId → submissionId }, so reverse-lookup to find playerId
-    const winnerId = Object.entries(room.submissionMap).find(
-      ([, sid]) => sid === submissionId
-    )?.[0];
-    if (!winnerId) return;
+    // Reverse-lookup submissionMap ({ playerId → submissionId }) for each slot
+    const reverseMap: Record<string, string> = {};
+    for (const [pid, sid] of Object.entries(room.submissionMap)) {
+      reverseMap[sid] = pid;
+    }
 
-    const winnerSnap = await tx.get(playerRef(roomCode, winnerId));
-    if (!winnerSnap.exists()) return;
-    const winner = winnerSnap.data() as Player;
+    // Count points per player (a player might fill multiple blanks)
+    const pointsPerPlayer: Record<string, number> = {};
+    const winnerPlayerIds: string[] = [];
+    for (const subId of submissionIds) {
+      const pid = reverseMap[subId];
+      if (!pid) continue;
+      pointsPerPlayer[pid] = (pointsPerPlayer[pid] ?? 0) + 1;
+      winnerPlayerIds.push(pid);
+    }
 
-    const newPoints = winner.points + 1;
-    const isGameOver = newPoints >= room.config.maxPoints ||
-      (room.config.maxRounds !== null && room.currentRound >= room.config.maxRounds);
+    // Award points and check game over
+    let isGameOver = false;
+    for (const [pid, pts] of Object.entries(pointsPerPlayer)) {
+      const snap = await tx.get(playerRef(roomCode, pid));
+      if (!snap.exists()) continue;
+      const player = snap.data() as Player;
+      const newPoints = player.points + pts;
+      if (newPoints >= room.config.maxPoints ||
+        (room.config.maxRounds !== null && room.currentRound >= room.config.maxRounds)) {
+        isGameOver = true;
+      }
+      tx.update(playerRef(roomCode, pid), { points: newPoints });
+    }
 
-    tx.update(playerRef(roomCode, winnerId), { points: newPoints });
     tx.update(roomRef(roomCode), {
-      winnerPlayerId: winnerId,
+      winnerPlayerIds,
       status: isGameOver ? "finished" : "playing",
     });
   });
@@ -357,7 +374,7 @@ export async function nextRound(roomCode: string): Promise<void> {
       submissions: {},
       submissionMap: {},
       submittedCount: 0,
-      winnerPlayerId: null,
+      winnerPlayerIds: [],
     });
   });
 }

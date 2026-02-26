@@ -16,7 +16,8 @@ interface SelectionPhaseProps {
 
 export function SelectionPhase({ room, currentPlayer, players }: SelectionPhaseProps) {
   const isZar = currentPlayer.id === room.zarPlayerId;
-  const pickCount = room.currentBlackCard?.pick ?? 1;
+  // Each player always plays exactly 1 card.
+  // The Zar assembles combinations in the verdict phase.
   const [selected, setSelected] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(currentPlayer.hasSubmitted);
@@ -39,20 +40,13 @@ export function SelectionPhase({ room, currentPlayer, players }: SelectionPhaseP
   }, [allSubmitted, room.phase, room.roomCode]);
 
   function toggleCard(card: string) {
-    setSelected((prev) => {
-      if (prev.includes(card)) {
-        return prev.filter((c) => c !== card);
-      }
-      if (prev.length >= pickCount) {
-        // Replace last if already at max
-        return [...prev.slice(0, pickCount - 1), card];
-      }
-      return [...prev, card];
-    });
+    setSelected((prev) =>
+      prev.includes(card) ? [] : [card]
+    );
   }
 
   async function handleSubmit() {
-    if (selected.length !== pickCount) return;
+    if (selected.length !== 1) return;
     setSubmitting(true);
     try {
       await submitCards(room.roomCode, currentPlayer.id, selected);
@@ -95,32 +89,13 @@ export function SelectionPhase({ room, currentPlayer, players }: SelectionPhaseP
 
       {/* Pick indicator */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-zinc-400 text-sm">
-          Elige <strong className="text-white">{pickCount}</strong> carta{pickCount > 1 ? "s" : ""}
-        </p>
-        <p className="text-zinc-500 text-xs">
-          {selected.length}/{pickCount} seleccionada{pickCount > 1 ? "s" : ""}
-        </p>
+        <p className="text-zinc-400 text-sm">Elige <strong className="text-white">1</strong> carta</p>
+        {room.currentBlackCard && room.currentBlackCard.pick > 1 && (
+          <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-full">
+            El Zar ensambla {room.currentBlackCard.pick} cartas
+          </span>
+        )}
       </div>
-
-      {/* Selection slots preview */}
-      {pickCount > 1 && selected.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {Array.from({ length: pickCount }).map((_, i) => (
-            <div
-              key={i}
-              className={cn(
-                "flex-shrink-0 w-32 h-16 rounded-xl border-2 flex items-center justify-center text-xs font-semibold",
-                selected[i]
-                  ? "bg-white text-black border-white"
-                  : "border-zinc-700 text-zinc-600"
-              )}
-            >
-              {selected[i] ?? `Carta ${i + 1}`}
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Hand */}
       <div className="grid grid-cols-2 gap-2.5">
@@ -129,7 +104,7 @@ export function SelectionPhase({ room, currentPlayer, players }: SelectionPhaseP
             key={`${card}-${idx}`}
             text={card}
             selected={selected.includes(card)}
-            selectionOrder={pickCount > 1 ? selected.indexOf(card) + 1 || undefined : undefined}
+            selectionOrder={undefined}
             onClick={() => toggleCard(card)}
           />
         ))}
@@ -144,13 +119,13 @@ export function SelectionPhase({ room, currentPlayer, players }: SelectionPhaseP
       {/* Submit button */}
       <button
         className="btn-primary flex items-center justify-center gap-2 sticky bottom-4"
-        disabled={selected.length !== pickCount || submitting}
+        disabled={selected.length !== 1 || submitting}
         onClick={handleSubmit}
       >
         {submitting ? (
           <><Loader2 size={20} className="animate-spin" /> Enviando...</>
         ) : (
-          <><SendHorizonal size={20} /> Jugar carta{pickCount > 1 ? "s" : ""}</>
+          <><SendHorizonal size={20} /> Jugar carta</>
         )}
       </button>
     </div>
