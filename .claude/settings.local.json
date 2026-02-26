@@ -9,7 +9,8 @@
       "Bash(cd \"D:/Proyectos/CAH/CartasContraLaHumanidad-master/Cartas contra Joao\" && npm run build 2>&1)",
       "Bash(cd \"D:/Proyectos/CAH/CartasContraLaHumanidad-master/Cartas contra Joao\" && npx tsc --noEmit 2>&1)",
       "Bash(cd \"D:/Proyectos/CAH/CartasContraLaHumanidad-master/Cartas contra Joao\" && npm show next version 2>&1)",
-      "Bash(cd \"D:/Proyectos/CAH/CartasContraLaHumanidad-master/Cartas contra Joao\" && npm show next dist-tags 2>&1)"
+      "Bash(cd \"D:/Proyectos/CAH/CartasContraLaHumanidad-master/Cartas contra Joao\" && npm show next dist-tags 2>&1)",
+      "Bash(python3:*)"
     ]
   }
 }
