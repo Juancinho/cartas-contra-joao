@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(tail:*)",
+      "Bash(cd:*)",
+      "Bash(head:*)",
+      "Bash(cd \"D:/Proyectos/CAH/CartasContraLaHumanidad-master/Cartas contra Joao\" && npm run build 2>&1)",
+      "Bash(cd \"D:/Proyectos/CAH/CartasContraLaHumanidad-master/Cartas contra Joao\" && npx tsc --noEmit 2>&1)"
+    ]
+  }
+}
